@@ -39,7 +39,11 @@ public enum Networker {
       let s1 = e[0] as! String
       let s2 = e[1] as! String
       let s3 = e[2] as! String
-      let tmp: [String] = [s1, s2, s3]
+      let s4 = e[3] as! String
+      let s5 = e[4] as! String
+//      let s6 = e[5] as! String
+      let tmp: [String] = [s1, s2, s3, s4, s5] // code .. feat
+//      let tmp: [String] = [s1, s2, s3]
       return tmp
       //      let s1 = e[0] as! String ,s2 = e[1] as! String; return s1 + ": " + s2
     }
@@ -48,6 +52,7 @@ public enum Networker {
   }
   // MARK: Hist
   @available(macOS 12.0, *)
+  @MainActor
   public static func fetchHist(_ code: String) async throws-> [candle] {
     let address = "https://stock.bad.mn/jsonS/\(code)"
     guard let url = URL(string: address) else {
@@ -78,7 +83,8 @@ public enum Networker {
     return hist
   }
   // MARK: Sqlite3
-  public static func queryHist(_ code: String = "1301") -> [candle] {
+  @available(macOS 12.0, *)
+  public static func queryHist(_ code: String = "1301") async throws ->  [candle] {
     var hist: [candle] = []
     //    let dbPath = "/Users/tanaka/Downloads/crawling.db"
     let dbPath = "/Volumes/Public/StockDB/crawling1.db"
@@ -99,9 +105,43 @@ public enum Networker {
       }
     } catch {
       print(error)
+      throw FetchError.someErr
     }
 
     return hist
+  }
+  @available(macOS 12.0, *)
+  public static func queryCodeTbl() async throws ->  [[String]] {
+    var codeTbl: [[String]] = []
+    let dbPath = "/Volumes/Public/StockDB/yatoday.db"
+
+    let tbl = "sqlite_master"
+    do {
+      let db = try Connection(dbPath)
+      var master = Table(tbl)
+      let name = Expression<String>("name")
+      //
+      let code = Expression<String>("code")
+      let company = Expression<String>("company")
+      let exchange = Expression<String>("exchange")
+      let marketcap = Expression<String>("marketcap")
+      let feature = Expression<String>("feature")
+      let category = Expression<String>("category")
+      var query = master.order(name.desc)
+      let hit = Array(try db.prepare(query)).first![name]
+      master = Table(hit)
+      query = master.order(code.asc)
+      let hit2 = Array(try db.prepare(query))
+      codeTbl = hit2.map { e in
+        [e[code], e[company], e[exchange], e[marketcap], e[feature],
+         e[category]]
+      }
+    } catch {
+      print(error)
+      throw FetchError.someErr
+    }
+
+    return codeTbl
   }
 }
 //Networker.queryHist()
