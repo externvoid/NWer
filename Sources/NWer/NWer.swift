@@ -41,8 +41,8 @@ public enum Networker {
       let s3 = e[2] as! String
       let s4 = e[3] as! String
       let s5 = e[4] as! String
-//      let s6 = e[5] as! String
-      let tmp: [String] = [s1, s2, s3, s4, s5] // code .. feat
+      let s6 = e[5] as! String
+      let tmp: [String] = [s1, s2, s3, s4, s5, s6] // code .. category
 //      let tmp: [String] = [s1, s2, s3]
       return tmp
       //      let s1 = e[0] as! String ,s2 = e[1] as! String; return s1 + ": " + s2
@@ -69,7 +69,7 @@ public enum Networker {
       options: []) as? [[Any]] else {
       throw FetchError.badJSON
     }
-    puts("OK2")
+    puts("called fetchHist")
     let hist: [candle] = ar.map { e in // ar: ar of ar
       let date = e[0] as! String
       let open = e[1] as! Double
