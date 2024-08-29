@@ -113,30 +113,40 @@ public enum Networker {
   @available(macOS 12.0, *)
   public static func queryCodeTbl() async throws ->  [[String]] {
     var codeTbl: [[String]] = []
-    let dbPath = "/Volumes/Public/StockDB/yatoday.db"
+    var n225Tbl: [[String]] = []
+    var dbPath = "/Volumes/Public/StockDB/yatoday.db"
 
-    let tbl = "codetbl"
+    var tbl = "codetbl"
     do {
-      let db = try Connection(dbPath)
-      let master = Table(tbl)
+      var db = try Connection(dbPath)
+      var master = Table(tbl)
       let code = Expression<String>("code")
       let company = Expression<String>("company")
       let exchange = Expression<String>("exchange")
       let marketcap = Expression<String>("marketcap")
       let feature = Expression<String>("feature")
       let category = Expression<String>("category")
-      let query = master.order(code.asc)
-      let hit = Array(try db.prepare(query))
+      var query = master.order(code.asc)
+      var hit = Array(try db.prepare(query))
       codeTbl = hit.map { e in
         [e[code], e[company], e[exchange], e[marketcap], e[feature],
          e[category]]
+      }
+      dbPath = "/Volumes/Public/StockDB/n225Hist.db"
+      db = try Connection(dbPath)
+      tbl = "n225Tbl"
+      master = Table(tbl)
+      query = master.order(code.asc)
+      hit = Array(try db.prepare(query))
+      n225Tbl = hit.map { e in
+        [e[code], e[company], "---", "---", "---", "指数"]
       }
     } catch {
       print(error)
       throw FetchError.someErr
     }
 
-    return codeTbl
+    return n225Tbl + codeTbl
   }
   // 2段階Query
   @available(macOS 12.0, *)
