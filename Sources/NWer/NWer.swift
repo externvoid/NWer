@@ -75,8 +75,8 @@ public enum Networker {
       let open = e[1] as! Double
       let high = e[2] as! Double
       let low = e[3] as! Double
-      let close = e[3] as! Double
-      let volume = e[3] as! Double
+      let close = e[4] as! Double
+      let volume = e[5] as! Double
       return (date, open, high, low, close, volume)
     }
 
