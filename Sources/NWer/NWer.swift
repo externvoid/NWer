@@ -113,17 +113,19 @@ public enum Networker {
     do {
       let db = try Connection(dbPath)
       let t1301 = Table(code)
-      let query = t1301.order(date.desc)// .filter(date > "2024-07-18")
+      let query = t1301.order(date.desc).limit(60)// .filter(date > "2024-07-18")
       let all = Array(try db.prepare(query))
       hist = all.map { e in
         (e[date], e[open], e[high], e[low], e[close], e[volume])
       }
+      hist.reverse()
     } catch {
       print(error)
       throw FetchError.someErr
     }
 
-    return hist
+    return hist.map { ($0.0.replacingOccurrences(of: "-", with: "/"),
+                       $0.1, $0.2, $0.3, $0.4, $0.5) }
   }
   @available(macOS 12.0, *)
   public static func queryCodeTbl() async throws ->  [[String]] {
