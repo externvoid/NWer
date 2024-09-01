@@ -16,6 +16,22 @@ public typealias candle = (
 typealias Expression = SQLite.Expression
 
 public enum Networker {
+  // for SQLite.swift and codeTbl, n225Hist
+  static let date = Expression<String>("date")
+  static let open = Expression<Double>("open")
+  static let high = Expression<Double>("high")
+  static let low = Expression<Double>("low")
+  static let close = Expression<Double>("close")
+  static let volume = Expression<Double>("volume")
+  // for crawling.db
+  static let code = Expression<String>("code")
+  static let company = Expression<String>("company")
+  static let exchange = Expression<String>("exchange")
+  static let marketcap = Expression<String>("marketcap")
+  static let feature = Expression<String>("feature")
+  static let category = Expression<String>("category")
+  static let name = Expression<String>("name") // e.g. code2024_08_30
+
   // MARK: CodeTbl
   @available(macOS 12.0, *)
   public static func fetchCodeTbl() async throws -> [[String]] {
@@ -85,19 +101,18 @@ public enum Networker {
   // MARK: Sqlite3
   @available(macOS 12.0, *)
   public static func queryHist(_ code: String = "1301") async throws ->  [candle] {
+
     var hist: [candle] = []
-    //    let dbPath = "/Users/tanaka/Downloads/crawling.db"
-    let dbPath = "/Volumes/Public/StockDB/crawling1.db"
+    var dbPath = ""
+    if code < "1300" {
+      dbPath = "/Volumes/Public/StockDB/n225Hist.db"
+    } else {
+      dbPath = "/Users/tanaka/Downloads/crawling.db"
+    }
     //    let code = "1301"
     do {
       let db = try Connection(dbPath)
       let t1301 = Table(code)
-      let date = Expression<String>("date")
-      let open = Expression<Double>("open")
-      let high = Expression<Double>("high")
-      let low = Expression<Double>("low")
-      let close = Expression<Double>("close")
-      let volume = Expression<Double>("volume")
       let query = t1301.order(date.desc)// .filter(date > "2024-07-18")
       let all = Array(try db.prepare(query))
       hist = all.map { e in
@@ -116,16 +131,10 @@ public enum Networker {
     var n225Tbl: [[String]] = []
     var dbPath = "/Volumes/Public/StockDB/yatoday.db"
 
-    var tbl = "codetbl"
+    var tbl = "codetbl" // using View Table
     do {
       var db = try Connection(dbPath)
       var master = Table(tbl)
-      let code = Expression<String>("code")
-      let company = Expression<String>("company")
-      let exchange = Expression<String>("exchange")
-      let marketcap = Expression<String>("marketcap")
-      let feature = Expression<String>("feature")
-      let category = Expression<String>("category")
       var query = master.order(code.asc)
       var hit = Array(try db.prepare(query))
       codeTbl = hit.map { e in
@@ -148,7 +157,7 @@ public enum Networker {
 
     return n225Tbl + codeTbl
   }
-  // 2段階Query
+  // 2段階Query, not using View Table
   @available(macOS 12.0, *)
   public static func queryCodeTbl2() async throws ->  [[String]] {
     var codeTbl: [[String]] = []
@@ -158,14 +167,6 @@ public enum Networker {
     do {
       let db = try Connection(dbPath)
       var master = Table(tbl)
-      let name = Expression<String>("name")
-      //
-      let code = Expression<String>("code")
-      let company = Expression<String>("company")
-      let exchange = Expression<String>("exchange")
-      let marketcap = Expression<String>("marketcap")
-      let feature = Expression<String>("feature")
-      let category = Expression<String>("category")
       var query = master.order(name.desc)
       let hit = Array(try db.prepare(query)).first![name]
       master = Table(hit)
@@ -183,6 +184,3 @@ public enum Networker {
     return codeTbl
   }
 }
-//Networker.queryHist()
-
-
