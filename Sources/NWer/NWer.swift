@@ -105,9 +105,9 @@ public enum Networker {
     var hist: [candle] = []
     var dbPath = ""
     if code < "1300" {
-      dbPath = "/Volumes/Public/StockDB/n225Hist.db"
+      dbPath = "/Volumes/homes/super/NASData/StockDB/n225Hist.db"
     } else {
-      dbPath = "/Users/tanaka/Downloads/crawling.db"
+      dbPath = "/Volumes/homes/super/NASData/StockDB/crawling.db"
     }
     //    let code = "1301"
     do {
@@ -131,8 +131,7 @@ public enum Networker {
   public static func queryCodeTbl() async throws ->  [[String]] {
     var codeTbl: [[String]] = []
     var n225Tbl: [[String]] = []
-    var dbPath = "/Volumes/Public/StockDB/yatoday.db"
-
+    var  dbPath = "/Volumes/homes/super/NASData/StockDB/yatoday.db"
     var tbl = "codetbl" // using View Table
     do {
       var db = try Connection(dbPath)
@@ -143,7 +142,7 @@ public enum Networker {
         [e[code], e[company], e[exchange], e[marketcap], e[feature],
          e[category]]
       }
-      dbPath = "/Volumes/Public/StockDB/n225Hist.db"
+      dbPath = "/Volumes/homes/super/NASData/StockDB/n225Hist.db"
       db = try Connection(dbPath)
       tbl = "n225Tbl"
       master = Table(tbl)
@@ -163,7 +162,7 @@ public enum Networker {
   @available(macOS 12.0, *)
   public static func queryCodeTbl2() async throws ->  [[String]] {
     var codeTbl: [[String]] = []
-    let dbPath = "/Volumes/Public/StockDB/yatoday.db"
+    let dbPath = "/Volumes/homes/super/NASData/StockDB/yatoday.db"
 
     let tbl = "sqlite_master"
     do {
