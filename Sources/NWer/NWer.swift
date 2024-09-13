@@ -100,14 +100,15 @@ public enum Networker {
   }
   // MARK: Sqlite3
   @available(macOS 12.0, *)
-  public static func queryHist(_ code: String = "1301") async throws ->  [candle] {
-
+  public static func queryHist(_ code: String = "1301",
+                               _ dbPath1: String,
+                               _ dbPath2: String) async throws ->  [candle] {
     var hist: [candle] = []
     var dbPath = ""
     if code < "1300" {
-      dbPath = "/Volumes/homes/super/NASData/StockDB/n225Hist.db"
+      dbPath = dbPath2
     } else {
-      dbPath = "/Volumes/homes/super/NASData/StockDB/crawling.db"
+      dbPath = dbPath1
     }
     //    let code = "1301"
     do {
@@ -128,10 +129,12 @@ public enum Networker {
                        $0.1, $0.2, $0.3, $0.4, $0.5) }
   }
   @available(macOS 12.0, *)
-  public static func queryCodeTbl() async throws ->  [[String]] {
+  public static func queryCodeTbl(
+    _ dbPath1: String,
+    _ dbPath2: String) async throws ->  [[String]] {
     var codeTbl: [[String]] = []
     var n225Tbl: [[String]] = []
-    var  dbPath = "/Volumes/homes/super/NASData/StockDB/yatoday.db"
+      var  dbPath = dbPath1
     var tbl = "codetbl" // using View Table
     do {
       var db = try Connection(dbPath)
@@ -142,7 +145,7 @@ public enum Networker {
         [e[code], e[company], e[exchange], e[marketcap], e[feature],
          e[category]]
       }
-      dbPath = "/Volumes/homes/super/NASData/StockDB/n225Hist.db"
+      dbPath = dbPath2
       db = try Connection(dbPath)
       tbl = "n225Tbl"
       master = Table(tbl)
