@@ -102,7 +102,8 @@ public enum Networker {
   @available(macOS 12.0, *)
   public static func queryHist(_ code: String = "1301",
                                _ dbPath1: String,
-                               _ dbPath2: String) async throws ->  [candle] {
+                               _ dbPath2: String,
+                               _ lim: Int = 60) async throws ->  [candle] {
     var hist: [candle] = []
     var dbPath = ""
     if code < "1300" {
@@ -114,7 +115,7 @@ public enum Networker {
     do {
       let db = try Connection(dbPath)
       let t1301 = Table(code)
-      let query = t1301.order(date.desc).limit(60)// .filter(date > "2024-07-18")
+      let query = t1301.order(date.desc).limit(lim)// .filter(date > "2024-07-18")
       let all = Array(try db.prepare(query))
       hist = all.map { e in
         (e[date], e[open], e[high], e[low], e[close], e[volume])
@@ -130,11 +131,11 @@ public enum Networker {
   }
   @available(macOS 12.0, *)
   public static func queryCodeTbl(
-    _ dbPath1: String,
+    _ dbPath1: String, // codeTbl
     _ dbPath2: String) async throws ->  [[String]] {
     var codeTbl: [[String]] = []
     var n225Tbl: [[String]] = []
-      var  dbPath = dbPath1
+    var  dbPath = dbPath1
     var tbl = "codetbl" // using View Table
     do {
       var db = try Connection(dbPath)
