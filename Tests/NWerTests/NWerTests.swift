@@ -19,11 +19,11 @@ final class NWerTests: XCTestCase {
         let dbPath2 = dbBase + "n225Hist.db"
         let dbPath3 = dbBase + "yatoday.db"
         // MARK: Hist
-        a = try! await Networker.queryHist("0000", dbPath1, dbPath2)
+        a = try! await Networker.queryHist("0000", dbPath1, dbPath2, 100)
         print(a[0...2])
         print(a[57...59])
         print("ar count: \(a.count)")
-        a = try! await Networker.queryHist("1301", dbPath1, dbPath2)
+        a = try! await Networker.queryHist("1301", dbPath1, dbPath2, 100)
         print(a[0...2])
         print(a[57...59])
         print("ar count: \(a.count)")

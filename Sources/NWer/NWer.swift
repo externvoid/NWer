@@ -13,6 +13,10 @@ public typealias candle = (
   date: String, open: Double, high: Double, low: Double,
   close: Double, volume: Double
 )
+public typealias record = (
+  date: String, open: Double, high: Double, low: Double,
+  close: Double, volume: Double, adj: Double
+)
 typealias Expression = SQLite.Expression
 
 public enum Networker {
@@ -23,6 +27,7 @@ public enum Networker {
   static let low = Expression<Double>("low")
   static let close = Expression<Double>("close")
   static let volume = Expression<Double>("volume")
+  static let adj = Expression<Double>("adj")
   // for crawling.db
   static let code = Expression<String>("code")
   static let company = Expression<String>("company")
@@ -104,7 +109,7 @@ public enum Networker {
                                _ dbPath1: String,
                                _ dbPath2: String,
                                _ lim: Int = 60) async throws ->  [candle] {
-    var hist: [candle] = []
+    var hist: [record] = []
     var dbPath = ""
     if code < "1300" {
       dbPath = dbPath2
@@ -118,7 +123,7 @@ public enum Networker {
       let query = t1301.order(date.desc).limit(lim)// .filter(date > "2024-07-18")
       let all = Array(try db.prepare(query))
       hist = all.map { e in
-        (e[date], e[open], e[high], e[low], e[close], e[volume])
+        (e[date], e[open], e[high], e[low], e[close], e[volume], e[adj])
       }
       hist.reverse()
     } catch {
@@ -126,8 +131,12 @@ public enum Networker {
       throw FetchError.someErr
     }
 
-    return hist.map { ($0.0.replacingOccurrences(of: "-", with: "/"),
-                       $0.1, $0.2, $0.3, $0.4, $0.5) }
+    return hist.map {
+      let r = $0.6 / $0.4
+      return ($0.0.replacingOccurrences(of: "-", with: "/"),
+                       $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
+//      $0.1, $0.2, $0.3, $0.4, $0.5)
+    }
   }
   @available(macOS 12.0, *)
   public static func queryCodeTbl(
