@@ -116,6 +116,7 @@ public enum Networker {
     } else {
       dbPath = dbPath1
     }
+    print("dbPath: \(dbPath)")
     //    let code = "1301"
     do {
       let db = try Connection(dbPath)
