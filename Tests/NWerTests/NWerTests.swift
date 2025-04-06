@@ -39,9 +39,9 @@ final class NWerTests: XCTestCase {
   }
   func testDownloadCSV() throws {
     let a = try! Networker.downloadAndParseCSV()
-    print(a[0...2])
-    print(a[57...59])
-    print("ar count: \(a.count)")
+    print(a.ar[0...2])
+    print(a.ar[57...59])
+    print("ar count: \(a.ar.count)")
   }
 
   func testUpdateFromWebAPI() throws {
@@ -57,5 +57,12 @@ final class NWerTests: XCTestCase {
   func testGetDate() throws {
     let a = try! Networker.getDate()
     print("Date: \(a)")
+  }
+  func testHasUpdated() throws {
+    let dbBase = "/Users/tanaka/Library/Application Support/ChartPlot/"
+
+    let dbPath1 = dbBase + "crawling.db"
+    let a = Networker.hasUpdated("2025-04-04", dbPath1)
+    print("Bool: \(a)")
   }
 }

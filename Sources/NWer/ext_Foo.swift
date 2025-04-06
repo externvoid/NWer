@@ -51,6 +51,7 @@ extension Networker {
 
     let csv: CSVData = try! downloadAndParseCSV()
 //    let recent: String = try! getDate)
+    if hasUpdated(csv.date, dbPath1) {print("already updated"); return}
 
     for (i, e) in csv.ar.enumerated() {
       if i % 500 == 0 {
@@ -121,6 +122,23 @@ extension Networker {
     } catch {
       print("エラーが発生しました@planeUpdate: \(error)")
     }
+  }
+  static func hasUpdated(_ dateStr: String, _ dbPath: String) -> Bool {
+    do {
+      // データベースに接続
+      let db = try Connection(dbPath)
+      let query = "SELECT date FROM '1301' order by date desc limit 1;"
+      let a = try? db.prepare(query).next()
+      if let a = a {
+        print("date: \(a[0]!)")
+        return dateStr == a[0]! as! String
+      } else {
+        print("no data")
+      }
+    } catch {
+      print("エラーが発生しました@lastUpdate: \(error)")
+    }
+    return false
   }
   static func planeUpdate(_ e: CSVData.OHLCVA, _ dateStr: String, _ dbPath: String) {
     let tbl: Table = Table(e.code)
