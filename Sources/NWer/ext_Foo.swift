@@ -40,8 +40,8 @@ public struct CSVData {
 }
 
 let ar: [CSVData.OHLCVA] = [CSVData.OHLCVA("0000",260.0,261.0,255.0,256.0,313600.0,256.0),
-   CSVData.OHLCVA("397A",260.0,261.0,255.0,256.0,313600.0,256.0),
-   CSVData.OHLCVA("300A",986.0,1008.0,971.0,981.0,51300.0,981.0)]
+                            CSVData.OHLCVA("397A",260.0,261.0,255.0,256.0,313600.0,256.0),
+                            CSVData.OHLCVA("300A",986.0,1008.0,971.0,981.0,51300.0,981.0)]
 
 extension Networker {
   // MARK: UpdateFromWebAPI
@@ -50,7 +50,7 @@ extension Networker {
   public static func updateFromWebAPI(_ dbPath1: String, _ dbPath2: String) ->  Void {
 
     let csv: CSVData = try! downloadAndParseCSV()
-//    let recent: String = try! getDate)
+    //    let recent: String = try! getDate)
     if hasUpdated(csv.date, dbPath1) {print("already updated"); return}
 
     for (i, e) in csv.ar.enumerated() {
@@ -62,10 +62,10 @@ extension Networker {
       if e.code < "1301" {
         dbPath = dbPath2
       }
-//      if e.code == "1301" {
-//        print("1301 found")
-//        break
-//      }
+      //      if e.code == "1301" {
+      //        print("1301 found")
+      //        break
+      //      }
       if e.adj < 0.0 {
         adjUpdate(e, csv.date, dbPath)
       } else {
@@ -76,9 +76,11 @@ extension Networker {
   static func adjUpdate(_ e: CSVData.OHLCVA, _ dateStr: String, _ dbPath: String) {
     let tbl: Table = Table(e.code)
     let rate: Double = abs(e.adj)
+    print("code:\(e.code), adj rate: \(rate)")
     do {
       // データベースに接続
       let db = try Connection(dbPath)
+      try! db.execute("PRAGMA journal_mode=wal;")
       let update = tbl.update(Networker.adj <- Networker.close / rate)
       // クエリを実行
       let _ = try db.run(update)
@@ -93,13 +95,14 @@ extension Networker {
     do {
       // データベースに接続
       let db = try Connection(dbPath)
+      try! db.execute("PRAGMA journal_mode=wal;")
 
       // usersテーブルの存在を確認するクエリ
       let query = "SELECT name FROM sqlite_master WHERE type='table' AND name='\(e.code)';"
       let insert = tbl.insert(Networker.date <- dateStr,
-          Networker.open <- e.open, Networker.high <- e.high, Networker.low <- e.low,
-          Networker.close <- e.close, Networker.volume <- e.volume,
-          Networker.adj <- e.close) // note: e.adj is rate
+                              Networker.open <- e.open, Networker.high <- e.high, Networker.low <- e.low,
+                              Networker.close <- e.close, Networker.volume <- e.volume,
+                              Networker.adj <- e.close) // note: e.adj is rate
       // e.adjの値に応じて処理を分岐
       // クエリを実行
       if let _ = try? db.prepare(query).next() {
@@ -130,7 +133,7 @@ extension Networker {
       let query = "SELECT date FROM '1301' order by date desc limit 1;"
       let a = try? db.prepare(query).next()
       if let a = a {
-        print("date: \(a[0]!)")
+        print("db  date: \(a[0]!)")
         return dateStr == a[0]! as! String
       } else {
         print("no data")
@@ -145,7 +148,7 @@ extension Networker {
     do {
       // データベースに接続
       let db = try Connection(dbPath)
-
+      try! db.execute("PRAGMA journal_mode=wal;")
       // usersテーブルの存在を確認するクエリ
       let query = "SELECT name FROM sqlite_master WHERE type='table' AND name='\(e.code)';"
       let insert = tbl.insert(Networker.date <- dateStr, Networker.open <- e.open, Networker.high <- e.high, Networker.low <- e.low, Networker.close <- e.close, Networker.volume <- e.volume, Networker.adj <- e.adj)
@@ -193,7 +196,7 @@ extension Networker {
     let filtered = lines.filter{ !$0.isEmpty } // 最後の空行を削除
     let dateStr: String! = filtered.first; let ohlcs = filtered.dropFirst()
     var result: CSVData = CSVData(dateStr, [])
-    print("date: \(result.date)")
+    print("csv date: \(result.date)")
 
     // 各行を処理
     for line in ohlcs {
