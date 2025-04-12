@@ -119,7 +119,7 @@ public enum Networker {
     print("dbPath: \(dbPath)")
     //    let code = "1301"
     do {
-      let db = try Connection(dbPath)
+      let db = try Connection(dbPath, readonly: true)
       let t1301 = Table(code)
       let query = t1301.order(date.desc).limit(lim)// .filter(date > "2024-07-18")
       let all = Array(try db.prepare(query))
