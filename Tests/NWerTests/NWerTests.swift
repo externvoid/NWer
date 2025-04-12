@@ -2,7 +2,7 @@ import XCTest
 @testable import NWer
 
 final class NWerTests: XCTestCase {
-  func testExample() throws {
+  func testQueryHist() throws {
       // XCTest Documentation
       // https://developer.apple.com/documentation/xctest
 
