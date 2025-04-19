@@ -108,6 +108,100 @@ public enum Networker {
   public static func queryHist(_ code: String = "1301",
                                _ dbPath1: String,
                                _ dbPath2: String,
+                               _ lim: Int = 60) async throws -> [candle] {
+    var hist: [record] = []
+    let dbPath = code < "1300" ? dbPath2 : dbPath1
+    print("dbPath@NWer: \(dbPath)")
+
+    let maxRetryCount = 3
+    var currentRetryCount = 0
+
+    return try await withCheckedThrowingContinuation { continuation in
+      serialQueue.async {
+        while currentRetryCount < maxRetryCount {
+          do {
+            let db = try Connection(dbPath, readonly: true)
+            let t1301 = Table(code)
+            let query = t1301.order(date.desc).limit(lim)
+            let all = Array(try db.prepare(query))
+            hist = all.map { e in
+              (e[date], e[open], e[high], e[low], e[close], e[volume], e[adj])
+            }
+            hist.reverse()
+            continuation.resume(returning: hist.map {
+              let r = $0.6 / $0.4
+              return ($0.0.replacingOccurrences(of: "-", with: "/"),
+                      $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
+            })
+            return
+          } catch {
+            currentRetryCount += 1
+            print("NWer.queryHist: \(error), RetryCnt: \(currentRetryCount)")
+            sleep(UInt32(Double.random(in: 1...3)))
+            if currentRetryCount >= maxRetryCount {
+              continuation.resume(throwing: FetchError.someErr)
+              return
+            }
+          } // do
+        }
+      }
+    } // withChecked
+  }
+//  @available(macOS 12.0, *)
+//  public static func queryHist2(_ code: String = "1301",
+//                               _ dbPath1: String,
+//                               _ dbPath2: String,
+//                               _ lim: Int = 60) async throws ->  [candle] {
+//    var hist: [record] = []
+//    var dbPath = ""
+//    if code < "1300" {
+//      dbPath = dbPath2
+//    } else {
+//      dbPath = dbPath1
+//    }
+//    print("dbPath@NWer: \(dbPath)")
+//    //    let code = "1301"
+//    let maxRetryCount = 3; var currentRetryCount = 0
+//    try await withCheckedThrowingContinuation { continuation in
+//
+//      serialQueue.async {
+//        do {
+//          let db = try Connection(dbPath, readonly: true)
+//          let t1301 = Table(code)
+//          let query = t1301.order(date.desc).limit(lim)// .filter(date > "2024-07-18")
+//          let all = Array(try db.prepare(query))
+//          hist = all.map { e in
+//            (e[date], e[open], e[high], e[low], e[close], e[volume], e[adj])
+//          }
+//          hist.reverse()
+//        } catch {
+//          currentRetryCount += 1
+//          print("NWer.queryHist: \(error), RetryCnt: \(currentRetryCount)")
+//          sleep(UInt32(Double.random(in: 1...3)))
+//          if currentRetryCount >= maxRetryCount {
+//            print("NWer.queryHist: \(error)")
+//            throw FetchError.someErr
+//          }
+//          print("NWer.queryHist: Retry")
+//        }
+//      } // end of async
+//      continuation.resume(with: hist)
+//    }
+//    try! await Task.sleep(seconds: Double.random(in: 2...4))
+//    //    sleep(1)
+//    print("after serialQueur")
+//    return hist.map {
+//      let r = $0.6 / $0.4
+//      return ($0.0.replacingOccurrences(of: "-", with: "/"),
+//              $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
+//      //      $0.1, $0.2, $0.3, $0.4, $0.5)
+//    }
+//  }
+
+  @available(macOS 12.0, *)
+  public static func queryHist_old(_ code: String = "1301",
+                               _ dbPath1: String,
+                               _ dbPath2: String,
                                _ lim: Int = 60) async throws ->  [candle] {
     var hist: [record] = []
     var dbPath = ""
@@ -119,8 +213,8 @@ public enum Networker {
     print("dbPath@NWer: \(dbPath)")
     //    let code = "1301"
     let maxRetryCount = 3; var currentRetryCount = 0
-    while false {
-//      while currentRetryCount < maxRetryCount {
+//    while false {
+    while currentRetryCount < maxRetryCount {
       do {
         let db = try Connection(dbPath, readonly: true)
         let t1301 = Table(code)
@@ -142,27 +236,6 @@ public enum Networker {
         print("NWer.queryHist: Retry")
       }
     } // end of while
-    await serialQueue.async {
-      do {
-        let db = try Connection(dbPath, readonly: true)
-        let t1301 = Table(code)
-        let query = t1301.order(date.desc).limit(lim)// .filter(date > "2024-07-18")
-        let all = Array(try db.prepare(query))
-        hist = all.map { e in
-          (e[date], e[open], e[high], e[low], e[close], e[volume], e[adj])
-        }
-        hist.reverse()
-      } catch {
-        currentRetryCount += 1
-        print("NWer.queryHist: \(error), RetryCnt: \(currentRetryCount)")
-        sleep(UInt32(Double.random(in: 1...3)))
-        if currentRetryCount >= maxRetryCount {
-          print("NWer.queryHist: \(error)")
-//          throw FetchError.someErr
-        }
-        print("NWer.queryHist: Retry")
-      }
-    } // end of async
     try! await Task.sleep(seconds: Double.random(in: 2...4))
 //    sleep(1)
     print("after serialQueur")
