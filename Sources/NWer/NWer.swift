@@ -110,6 +110,7 @@ public enum Networker {
                                _ dbPath2: String,
                                _ lim: Int = 60) async throws -> [candle] {
     var hist: [record] = []
+//    let hist: [record] = []
     let dbPath = code < "1300" ? dbPath2 : dbPath1
     print("dbPath@NWer: \(dbPath)")
 
@@ -129,11 +130,11 @@ public enum Networker {
             return ($0.0.replacingOccurrences(of: "-", with: "/"),
                     $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
           })
-          return
+//          return
         } catch {
           print("NWer.queryHist: \(error)") //, RetryCnt: \(currentRetryCount)")
           continuation.resume(throwing: FetchError.someErr)
-            return
+//            return
         } // do
       }
     } // withChecked
