@@ -10,6 +10,9 @@ let package = Package(
         .library(
             name: "NWer",
             targets: ["NWer"]),
+        .executable(
+          name: "upChartPlot",
+          targets: ["upChartPlot"]),
     ],
     dependencies: [.package(url: "https://github.com/stephencelis/SQLite.swift",
                             .upToNextMajor(from: "0.15.3"))
@@ -20,8 +23,14 @@ let package = Package(
         .target(
             name: "NWer",
             dependencies: [.product(name: "SQLite", package: "SQLite.swift")]),
+        .target(
+          name: "upChartPlot",
+          dependencies: ["NWer"]),
         .testTarget(
             name: "NWerTests",
             dependencies: ["NWer"]),
+        .testTarget(
+          name: "upChartPlotTests",
+          dependencies: ["NWer", "upChartPlot"]),
     ]
 )

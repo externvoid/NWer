@@ -2,6 +2,11 @@ import XCTest
 @testable import NWer
 
 final class NWerTests: XCTestCase {
+  let dbBase = "/Users/tanaka/Library/Application Support/ChartPlot/"
+  var dbPath1: String { dbBase + "crawling.db" }
+  var dbPath2: String { dbBase + "n225Hist.db" }
+  var dbPath3: String { dbBase + "yatoday.db" }
+
   func testQueryHist() throws {
       // XCTest Documentation
       // https://developer.apple.com/documentation/xctest
@@ -13,13 +18,6 @@ final class NWerTests: XCTestCase {
       print(a[0...2])
       print(a[57...59])
       print("ar count: \(a.count)")
-      let dbBase = "/Users/tanaka/Library/Application Support/ChartPlot/"
-
-//        let dbBase = "/Volumes/twnfs/newya/asset/"
-//        let dbBase = "/Volumes/homes/super/NASData/StockDB/"
-      let dbPath1 = dbBase + "crawling.db"
-      let dbPath2 = dbBase + "n225Hist.db"
-      let dbPath3 = dbBase + "yatoday.db"
       // MARK: Hist
       a = try! await Networker.queryHist("0000", dbPath1, dbPath2, 100)
       print(a[0...2])
@@ -45,12 +43,6 @@ final class NWerTests: XCTestCase {
   }
 
   func testUpdateFromWebAPI() throws {
-    let dbBase = "/Users/tanaka/Library/Application Support/ChartPlot/"
-
-    let dbPath1 = dbBase + "crawling.db"
-    //    let dbPath1 = dbBase + "stock_light.db"
-    let dbPath2 = dbBase + "n225Hist.db"
-    let _ = dbBase + "yatoday.db"
     Networker.updateFromWebAPI(dbPath1, dbPath2)
   }
 
@@ -59,10 +51,15 @@ final class NWerTests: XCTestCase {
     print("Date: \(a)")
   }
   func testHasUpdated() throws {
-    let dbBase = "/Users/tanaka/Library/Application Support/ChartPlot/"
-
-    let dbPath1 = dbBase + "crawling.db"
     let a = Networker.hasUpdated("2025-04-04", dbPath1)
     print("Bool: \(a)")
+  }
+  func testSyncStock() throws {
+    Networker.syncStock(dbPath1, "")
+//    print("sqlite3 latest date: \(a ?? "no data")")
+  }
+  func testGetUpdateFiles() throws {
+    let ar: [String] = try! Networker.getUpdateFiles(dbPath1) // [] or ["2025-..", "2025-..]
+    print("sqlite3 latest date: \(ar.description)")
   }
 }

@@ -11,7 +11,7 @@ enum DownloadError: Error {
 
 // CSVデータの構造体定義
 public struct CSVData {
-  let date: String
+  public let date: String
   var ar: [OHLCVA]
   init(_ date: String, _ ar: [OHLCVA]) {
     self.date = date
