@@ -112,7 +112,7 @@ public enum Networker {
     var hist: [record] = []
 //    let hist: [record] = []
     let dbPath = code < "1300" ? dbPath2 : dbPath1
-    print("dbPath@NWer: \(dbPath)")
+    print("code@NWer: \(code)")
 
     return try await withCheckedThrowingContinuation { continuation in
       serialQueue.async {
@@ -214,7 +214,7 @@ public enum Networker {
         [e[code], e[company], "---", "---", "---", "指数"]
       }
     } catch {
-      print(error)
+      print("\(error), might be an app sandbox setting issue")
       throw FetchError.someErr
     }
 

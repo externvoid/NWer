@@ -15,7 +15,9 @@ let package = Package(
           targets: ["UpChartPlot"]),
     ],
     dependencies: [.package(url: "https://github.com/stephencelis/SQLite.swift",
-                            .upToNextMajor(from: "0.15.3"))
+                                  .upToNextMajor(from: "0.15.3"))
+//                   from: "0.15.3")
+//                   branch: "main")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
