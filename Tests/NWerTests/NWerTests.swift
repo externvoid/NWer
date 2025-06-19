@@ -62,4 +62,18 @@ final class NWerTests: XCTestCase {
     let ar: [String] = try! Networker.getUpdateFiles(dbPath1) // [] or ["2025-..", "2025-..]
     print("sqlite3 latest date: \(ar.description)")
   }
+  func testQueryHist2() throws {
+    Task {
+      // MARK: Hist
+      var a = try! await Networker.queryHist("0000", dbPath1, dbPath2, 100)
+      print(a[0...2])
+      print(a[97...99])
+      print("ar count: \(a.count)")
+      a = try! await Networker.queryHist("1822", dbPath1, dbPath2, 100)
+      print(a[0...2])
+      print(a[97...99])
+      print("ar count: \(a.count)")
+    }
+    RunLoop.current.run(until: Date() + 0.5)
+  }
 }

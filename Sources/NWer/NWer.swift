@@ -17,6 +17,10 @@ public typealias record = (
   date: String, open: Double, high: Double, low: Double,
   close: Double, volume: Double, adj: Double
 )
+public typealias record2 = (
+  date: String, open: Double, high: Double, low: Double,
+  close: Double, volume: Double
+)
 typealias Expression = SQLite.Expression
 
 public enum Networker {
@@ -104,13 +108,59 @@ public enum Networker {
     return hist
   }
   // MARK: Sqlite3
-  @available(macOS 12.0, *)
+  @available(macOS 12.0, *) // 2025-06-19Th
   public static func queryHist(_ code: String = "1301",
                                _ dbPath1: String,
                                _ dbPath2: String,
                                _ lim: Int = 60) async throws -> [candle] {
-    var hist: [record] = []
+    var hist: [record2] = []
 //    let hist: [record] = []
+    let dbPath = code < "1300" ? dbPath2 : dbPath1
+    print("code@NWer: \(code)")
+
+    return try await withCheckedThrowingContinuation { continuation in
+      serialQueue.async {
+        do {
+          let db = try Connection(dbPath, readonly: true)
+          let query = """
+            SELECT 
+              REPLACE(date, '-', '/') AS date,
+              open * rate AS adj_open,
+              high * rate AS adj_high,
+              low * rate AS adj_low,
+              adj,
+              volume / rate AS adj_volume
+               FROM (
+                SELECT *,
+                adj * 1.0 / close AS rate
+                FROM '\(code)'
+                ORDER BY date DESC
+                LIMIT \(lim)
+              )
+            ORDER BY date ASC;
+            """
+
+          for e in try db.prepare(query) {
+            hist.append((e[0] as! String, e[1] as! Double, e[2] as! Double,
+                         e[3] as! Double, e[4] as! Double, e[5] as! Double))
+          }
+
+          continuation.resume(returning: hist)
+        } catch {
+          print("NWer.queryHist: \(error)") //, RetryCnt: \(currentRetryCount)")
+          continuation.resume(throwing: FetchError.someErr)
+        } // do
+      }
+    } // withChecked
+  }
+
+  @available(macOS 12.0, *)
+  public static func queryHist_oldcon(_ code: String = "1301",
+                                      _ dbPath1: String,
+                                      _ dbPath2: String,
+                                      _ lim: Int = 60) async throws -> [candle] {
+    var hist: [record] = []
+    //    let hist: [record] = []
     let dbPath = code < "1300" ? dbPath2 : dbPath1
     print("code@NWer: \(code)")
 
@@ -130,11 +180,11 @@ public enum Networker {
             return ($0.0.replacingOccurrences(of: "-", with: "/"),
                     $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
           })
-//          return
+          //          return
         } catch {
           print("NWer.queryHist: \(error)") //, RetryCnt: \(currentRetryCount)")
           continuation.resume(throwing: FetchError.someErr)
-//            return
+          //            return
         } // do
       }
     } // withChecked
