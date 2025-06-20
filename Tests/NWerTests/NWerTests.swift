@@ -75,5 +75,14 @@ final class NWerTests: XCTestCase {
       print("ar count: \(a.count)")
     }
     RunLoop.current.run(until: Date() + 0.5)
+}
+  func testQueryCodeTbl2() throws {
+    Task {
+      let b = try! await Networker.queryCodeTbl(dbPath3, dbPath2)
+//      print(b[0...2])
+      print(b[37...39])
+      print("ar count: \(b.count)")
+    }
+    RunLoop.current.run(until: Date() + 0.5)
   }
 }

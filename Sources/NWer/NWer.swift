@@ -155,7 +155,7 @@ public enum Networker {
   }
 
   @available(macOS 12.0, *)
-  public static func queryHist_oldcon(_ code: String = "1301",
+  public static func queryHist_old2(_ code: String = "1301",
                                       _ dbPath1: String,
                                       _ dbPath2: String,
                                       _ lim: Int = 60) async throws -> [candle] {
@@ -237,8 +237,51 @@ public enum Networker {
                        $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
     }
   }
+  // !!!: New
   @available(macOS 12.0, *)
   public static func queryCodeTbl(
+    _ dbPath1: String, // codeTbl
+    _ dbPath2: String) async throws ->  [[String]] {
+      let subdbPath = dbPath1.replacingOccurrences(of: "yatoday", with: "crawling")
+
+      var codeTbl: [[String]] = []
+      var n225Tbl: [[String]] = []
+      // step 1
+      var  dbPath = dbPath1
+      var tbl = "codetbl" // using View Table
+      do {
+        var db = try Connection(dbPath, readonly: true)
+        try db.attach(.uri(subdbPath, parameters: [.mode(.readOnly)]), as: "sub")
+        let sql = """
+          SELECT * FROM \(tbl)
+          WHERE code IN (
+          SELECT name FROM sub.sqlite_master WHERE type = 'table'
+          ) order by code;
+          """
+        for e in try db.prepare(sql) {
+          codeTbl.append([e[0] as! String, e[2] as! String, e[1] as! String,
+                         e[6] as! String, e[7] as! String, e[8] as! String])
+        }
+        try db.detach("sub")
+        // !!!: step 2
+        dbPath = dbPath2
+        db = try Connection(dbPath, readonly: true)
+        tbl = "n225Tbl"
+        let master = Table(tbl)
+        let query = master.order(code.asc)
+        let hit = Array(try db.prepare(query))
+        n225Tbl = hit.map { e in
+          [e[code], e[company], "---", "---", "---", "指数"]
+        }
+      } catch {
+        print("\(error), might be an app sandbox setting issue")
+        throw FetchError.someErr
+      }
+
+      return n225Tbl + codeTbl
+    }
+  @available(macOS 12.0, *)
+  public static func queryCodeTbl3(
     _ dbPath1: String, // codeTbl
     _ dbPath2: String) async throws ->  [[String]] {
     var codeTbl: [[String]] = []
