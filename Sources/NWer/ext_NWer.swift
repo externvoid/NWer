@@ -44,9 +44,9 @@ let ar: [CSVData.OHLCVA] = [CSVData.OHLCVA("0000",260.0,261.0,255.0,256.0,313600
                             CSVData.OHLCVA("300A",986.0,1008.0,971.0,981.0,51300.0,981.0)]
 
 extension Networker {
-  // MARK: UpdateFromWebAPI
-
-  @available(macOS 12.0, *) // upDateFromWebAPI
+  // MARK: UpdateFromWebAPI,upDateFromWebAPI is no longer necessary.
+  // syncStock is used for UpChartPlot
+  @available(macOS 12.0, *) //
   public static func updateFromWebAPI(_ dbPath1: String, _ dbPath2: String) ->  Void {
 
     let csv: CSVData = try! downloadAndParseCSV()

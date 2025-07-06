@@ -22,7 +22,7 @@ public typealias record2 = (
   close: Double, volume: Double
 )
 typealias Expression = SQLite.Expression
-
+//let db = try! Connection("crawling.db")
 public enum Networker {
   // for SQLite.swift and codeTbl, n225Hist
   static let date = Expression<String>("date")
@@ -40,6 +40,8 @@ public enum Networker {
   static let feature = Expression<String>("feature")
   static let category = Expression<String>("category")
   static let name = Expression<String>("name") // e.g. code2024_08_30
+//  static var db: Connection = try! Connection()
+  // static func NWer_init
 
   // MARK: CodeTbl
   @available(macOS 12.0, *)

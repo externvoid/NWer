@@ -13,7 +13,7 @@ extension Networker {
     ar.forEach { e in
       print("update file: \(e)")
       let csv: CSVData = try! downloadAndParseCSV(from: base + e)
-    //    let recent: String = try! getDate)
+      //    let recent: String = try! getDate)
       if hasUpdated(csv.date, dbPath1) {print("already updated"); return}
 
       for (i, e) in csv.ar.enumerated() {
@@ -57,7 +57,7 @@ extension Networker {
   }
   @available(macOS 12, *)
   static func getUpdateFiles(_ dbPath: String, from base: String = "https://stock.bad.mn/recent") throws -> [String] {
-//    let d: String = "2025-05-28" // !!!: for debug
+    //    let d: String = "2025-05-28" // !!!: for debug
     let d: String = getLatest(dbPath)!
     // let d: String = Date.now.description.components(separatedBy:" ").first! UTC
     let q: String = "?d=\(d)"
@@ -69,5 +69,28 @@ extension Networker {
     print("content: \(ret))")
 
     return ret.filter { $0 != "" }
+  }
+  //
+  // codeTbl: code, company, exchange, marketcap, feature, category
+  @available(macOS 12, *)
+  public static func store2CodeTbl(_ codeTbl: inout [[String]], _ dbPath: String) {
+    let tbl = "codeTbl", prevTbl = "prevCodeTbl"
+    do {
+      let db = try Connection(dbPath)//, readonly: true)
+      try db.execute("""
+    drop table  IF EXISTS \(prevTbl);
+    alter table \(tbl) rename to \(prevTbl);
+    CREATE TABLE IF NOT EXISTS \(tbl)(code, exchange, company, quote, change, updating, marketcap, feature, category);
+  """
+      )
+      try db.execute("begin transaction;")
+      let sqlI = try db.prepare("insert into '\(tbl)' values (?, ?, ?, ?, ?, ?, ?, ?, ?);")
+      try codeTbl.forEach { e in
+        try sqlI.run(e[0], e[2], e[1], "---", "---", "---", e[3], e[4], e[5])
+      }
+      try db.execute("end transaction;")
+    }catch {
+      print("Error store2DB for code \(tbl): \(error)")
+    }
   }
 }

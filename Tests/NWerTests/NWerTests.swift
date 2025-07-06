@@ -85,4 +85,16 @@ final class NWerTests: XCTestCase {
     }
     RunLoop.current.run(until: Date() + 0.5)
   }
+  // !!!: New
+  func testfetchCodeTblNStore() throws {
+    Task {
+      // 最新レコードへのalias codeTblから必要カラムのみを取り出すWeb API
+      var codeTbl = try! await Networker.fetchCodeTbl()
+      //      print(b[0...2])
+      print(codeTbl[37...39])
+      print("codeTbl count: \(codeTbl.count)")
+      Networker.store2CodeTbl(&codeTbl, dbPath3)
+    }
+    RunLoop.current.run(until: Date() + 1.5)
+  }
 }
