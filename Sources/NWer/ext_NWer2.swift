@@ -93,4 +93,19 @@ extension Networker {
       print("Error store2DB for code \(tbl): \(error)")
     }
   }
+  public static func deInitDB() {
+    db = nil
+  }// = /User/.../yatoday.db
+  public static func initDB(_ dbPath: String) { // = /User/.../yatoday.db
+    do { // main: ya.., sub: cra.., n225: n225..
+      db = try Connection(dbPath)
+      let jpyfdbPath = dbPath.replacingOccurrences(of: "yatoday", with: "crawling")
+      let n225dbPath = dbPath.replacingOccurrences(of: "yatoday", with: "n225Hist")
+      try db.attach(.uri(jpyfdbPath, parameters: [.mode(.readOnly)]), as: "sub")
+      try db.attach(.uri(n225dbPath, parameters: [.mode(.readOnly)]), as: "n225")
+
+    } catch {
+      print("Error InitializeDB: \(error)")
+    }
+  }
 }

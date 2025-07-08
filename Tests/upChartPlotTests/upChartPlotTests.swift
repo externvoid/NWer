@@ -8,7 +8,7 @@
 
 import XCTest
 import NWer
-@testable import upChartPlot
+//@testable import UpChartPlot
 
 final class upChartPlotTests: XCTestCase {
   let dbBase = "/Users/tanaka/Library/Application Support/ChartPlot/"

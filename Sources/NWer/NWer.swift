@@ -40,7 +40,7 @@ public enum Networker {
   static let feature = Expression<String>("feature")
   static let category = Expression<String>("category")
   static let name = Expression<String>("name") // e.g. code2024_08_30
-//  static var db: Connection = try! Connection()
+  static var db: Connection! // = try! Connection()
   // static func NWer_init
 
   // MARK: CodeTbl
@@ -109,21 +109,18 @@ public enum Networker {
 
     return hist
   }
-  // MARK: Sqlite3
+  // MARK: Mod
   @available(macOS 12.0, *) // 2025-06-19Th
-  public static func queryHist(_ code: String = "1301",
-                               _ dbPath1: String,
-                               _ dbPath2: String,
+  public static func queryHist(_ code: String = "1301", _ P1: String, _ P2: String,
                                _ lim: Int = 60) async throws -> [candle] {
     var hist: [record2] = []
 //    let hist: [record] = []
-    let dbPath = code < "1300" ? dbPath2 : dbPath1
+    let sub = code < "1300" ? "n225" : "sub"
     print("code@NWer: \(code)")
 
     return try await withCheckedThrowingContinuation { continuation in
       serialQueue.async {
         do {
-          let db = try Connection(dbPath, readonly: true)
           let query = """
             SELECT 
               REPLACE(date, '-', '/') AS date,
@@ -135,7 +132,7 @@ public enum Networker {
                FROM (
                 SELECT *,
                 adj * 1.0 / close AS rate
-                FROM '\(code)'
+                FROM \(sub).'\(code)'
                 ORDER BY date DESC
                 LIMIT \(lim)
               )
@@ -156,124 +153,32 @@ public enum Networker {
     } // withChecked
   }
 
+  // !!!: Mod
   @available(macOS 12.0, *)
-  public static func queryHist_old2(_ code: String = "1301",
-                                      _ dbPath1: String,
-                                      _ dbPath2: String,
-                                      _ lim: Int = 60) async throws -> [candle] {
-    var hist: [record] = []
-    //    let hist: [record] = []
-    let dbPath = code < "1300" ? dbPath2 : dbPath1
-    print("code@NWer: \(code)")
-
-    return try await withCheckedThrowingContinuation { continuation in
-      serialQueue.async {
-        do {
-          let db = try Connection(dbPath, readonly: true)
-          let t1301 = Table(code)
-          let query = t1301.order(date.desc).limit(lim)
-          let all = Array(try db.prepare(query))
-          hist = all.map { e in
-            (e[date], e[open], e[high], e[low], e[close], e[volume], e[adj])
-          }
-          hist.reverse()
-          continuation.resume(returning: hist.map {
-            let r = $0.6 / $0.4
-            return ($0.0.replacingOccurrences(of: "-", with: "/"),
-                    $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
-          })
-          //          return
-        } catch {
-          print("NWer.queryHist: \(error)") //, RetryCnt: \(currentRetryCount)")
-          continuation.resume(throwing: FetchError.someErr)
-          //            return
-        } // do
-      }
-    } // withChecked
-  }
-
-  @available(macOS 12.0, *)
-  public static func queryHist_old(_ code: String = "1301",
-                               _ dbPath1: String,
-                               _ dbPath2: String,
-                               _ lim: Int = 60) async throws ->  [candle] {
-    var hist: [record] = []
-    var dbPath = ""
-    if code < "1300" {
-      dbPath = dbPath2
-    } else {
-      dbPath = dbPath1
-    }
-    print("dbPath@NWer: \(dbPath)")
-    //    let code = "1301"
-    let maxRetryCount = 3; var currentRetryCount = 0
-//    while false {
-    while currentRetryCount < maxRetryCount {
-      do {
-        let db = try Connection(dbPath, readonly: true)
-        let t1301 = Table(code)
-        let query = t1301.order(date.desc).limit(lim)// .filter(date > "2024-07-18")
-        let all = Array(try db.prepare(query))
-        hist = all.map { e in
-          (e[date], e[open], e[high], e[low], e[close], e[volume], e[adj])
-        }
-        hist.reverse()
-        break // Exit the loop if the query is successful
-      } catch {
-        currentRetryCount += 1
-        print("NWer.queryHist: \(error), RetryCnt: \(currentRetryCount)")
-        sleep(UInt32(Double.random(in: 1...3)))
-        if currentRetryCount >= maxRetryCount {
-          print("NWer.queryHist: \(error)")
-          throw FetchError.someErr
-        }
-        print("NWer.queryHist: Retry")
-      }
-    } // end of while
-    try! await Task.sleep(seconds: Double.random(in: 2...4))
-//    sleep(1)
-    print("after serialQueur")
-    return hist.map {
-      let r = $0.6 / $0.4
-      return ($0.0.replacingOccurrences(of: "-", with: "/"),
-                       $0.1 * r, $0.2 * r, $0.3 * r, $0.6, $0.5 / r)
-    }
-  }
-  // !!!: New
-  @available(macOS 12.0, *)
-  public static func queryCodeTbl(
-    _ dbPath1: String, // codeTbl
-    _ dbPath2: String) async throws ->  [[String]] {
-      let subdbPath = dbPath1.replacingOccurrences(of: "yatoday", with: "crawling")
-
+  public static func queryCodeTbl( _ p1: String, _ p2: String) async throws
+  ->  [[String]] {
       var codeTbl: [[String]] = []
       var n225Tbl: [[String]] = []
-      // step 1
-      var  dbPath = dbPath1
+      // !!!: step 1
       var tbl = "codetbl" // using View Table
       do {
-        var db = try Connection(dbPath, readonly: true)
-        try db.attach(.uri(subdbPath, parameters: [.mode(.readOnly)]), as: "sub")
         let sql = """
           SELECT * FROM \(tbl)
           WHERE code IN (
           SELECT name FROM sub.sqlite_master WHERE type = 'table'
           ) order by code;
           """
-        for e in try db.prepare(sql) {
+        for e in try db.prepare(sql) { // code, exchange, company...
           codeTbl.append([e[0] as! String, e[2] as! String, e[1] as! String,
                          e[6] as! String, e[7] as! String, e[8] as! String])
         }
-        try db.detach("sub")
         // !!!: step 2
-        dbPath = dbPath2
-        db = try Connection(dbPath, readonly: true)
         tbl = "n225Tbl"
-        let master = Table(tbl)
-        let query = master.order(code.asc)
-        let hit = Array(try db.prepare(query))
-        n225Tbl = hit.map { e in
-          [e[code], e[company], "---", "---", "---", "指数"]
+        let sql2 = """
+          SELECT * FROM n225.\(tbl) order by code;
+          """
+        for e in try db.prepare(sql2) {
+          n225Tbl.append([e[0] as! String, "---", e[1] as! String,  "---", "---", "指数"])
         }
       } catch {
         print("\(error), might be an app sandbox setting issue")
@@ -282,63 +187,4 @@ public enum Networker {
 
       return n225Tbl + codeTbl
     }
-  @available(macOS 12.0, *)
-  public static func queryCodeTbl3(
-    _ dbPath1: String, // codeTbl
-    _ dbPath2: String) async throws ->  [[String]] {
-    var codeTbl: [[String]] = []
-    var n225Tbl: [[String]] = []
-    var  dbPath = dbPath1
-    var tbl = "codetbl" // using View Table
-    do {
-      var db = try Connection(dbPath)
-      var master = Table(tbl)
-      var query = master.order(code.asc)
-      var hit = Array(try db.prepare(query))
-      codeTbl = hit.map { e in
-        [e[code], e[company], e[exchange], e[marketcap], e[feature],
-         e[category]]
-      }
-      dbPath = dbPath2
-      db = try Connection(dbPath)
-      tbl = "n225Tbl"
-      master = Table(tbl)
-      query = master.order(code.asc)
-      hit = Array(try db.prepare(query))
-      n225Tbl = hit.map { e in
-        [e[code], e[company], "---", "---", "---", "指数"]
-      }
-    } catch {
-      print("\(error), might be an app sandbox setting issue")
-      throw FetchError.someErr
-    }
-
-    return n225Tbl + codeTbl
-  }
-  // 2段階Query, not using View Table
-  @available(macOS 12.0, *)
-  public static func queryCodeTbl2() async throws ->  [[String]] {
-    var codeTbl: [[String]] = []
-    let dbPath = "/Volumes/homes/super/NASData/StockDB/yatoday.db"
-
-    let tbl = "sqlite_master"
-    do {
-      let db = try Connection(dbPath)
-      var master = Table(tbl)
-      var query = master.order(name.desc)
-      let hit = Array(try db.prepare(query)).first![name]
-      master = Table(hit)
-      query = master.order(code.asc)
-      let hit2 = Array(try db.prepare(query))
-      codeTbl = hit2.map { e in
-        [e[code], e[company], e[exchange], e[marketcap], e[feature],
-         e[category]]
-      }
-    } catch {
-      print(error)
-      throw FetchError.someErr
-    }
-
-    return codeTbl
-  }
 }
